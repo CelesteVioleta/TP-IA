@@ -35,6 +35,5 @@ public class LineOfSight : MonoBehaviour
         Gizmos.DrawRay(transform.position, transform.forward * distance);
         Gizmos.DrawRay(transform.position, Quaternion.Euler(0, angle / 2, 0) * transform.forward * distance);
         Gizmos.DrawRay(transform.position, Quaternion.Euler(0, - angle / 2, 0) * transform.forward * distance);
-
     }
 }
