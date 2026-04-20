@@ -6,7 +6,8 @@ using UnityEngine.Scripting.APIUpdating;
 public class EnemyControllerLS : MonoBehaviour
 {
     [Header("Referencias")]
-    [SerializeField] private Transform player;
+    [SerializeField] private Transform player;    
+    [SerializeField] GameObject indicator;
     [SerializeField] private Rigidbody playerRb;
     [SerializeField] LineOfSight los;
     [SerializeField] List<PatrolPoint> patrolPoints;
@@ -16,7 +17,11 @@ public class EnemyControllerLS : MonoBehaviour
 
     [Header("Variables")]
     [SerializeField] private float speed;
+    [SerializeField] private float patrolSpeed;
+    [SerializeField] private float chaseSpeed;
     [SerializeField] private float rotationSpeed;
+    [SerializeField] private float patrolRotationSpeed;
+    [SerializeField] private float investigationRotationSpeed;
     [SerializeField] private float productionTime;
     [SerializeField] private float evadeDistance;
 
@@ -65,10 +70,15 @@ public class EnemyControllerLS : MonoBehaviour
         {
             lastKnownPlayerPosition = player.position;
             hasLastKnownPosition = true;
-            isInvestigating = false; 
+            isInvestigating = false;
+            indicator.SetActive(true);
+        }
+        else
+        {
+            indicator.SetActive(false);
         }
 
-        List<ActionOption> actionOptions = BuildAction(canSeePlayer, isClose);
+            List<ActionOption> actionOptions = BuildAction(canSeePlayer, isClose);
 
         ActionOption bestAction = SelectBestAction(actionOptions);
         bestAction.action?.Invoke();
@@ -118,6 +128,7 @@ public class EnemyControllerLS : MonoBehaviour
     private void Chase()
     {
         Vector3 dir = SteeringBehavior.Chase(transform, player, playerRb, 1f);
+        speed = chaseSpeed;
 
         Move(dir);
     }
@@ -136,6 +147,8 @@ public class EnemyControllerLS : MonoBehaviour
             rb.linearVelocity = Vector3.zero;
             return;
         }
+
+        speed = patrolSpeed;
 
         PatrolPoint targetPoint = patrolPoints[currentPatrolIndex];
         Transform target = targetPoint.point;
@@ -193,7 +206,7 @@ public class EnemyControllerLS : MonoBehaviour
             investigateTimer = investigateWaitTime;
         }
 
-        transform.Rotate(0, rotationSpeed * Time.deltaTime, 0);
+        transform.Rotate(0, investigationRotationSpeed * Time.deltaTime, 0);
 
         investigateTimer -= Time.deltaTime;
 
@@ -216,23 +229,21 @@ public class EnemyControllerLS : MonoBehaviour
             transform.forward = Vector3.Lerp(transform.forward, dir.normalized, Time.deltaTime * rotationSpeed);
         }
 
-        // 👉 SOLO entra una vez
         if (!isAttacking)
         {
             isAttacking = true;
             attackTimer = attackDuration;
 
-            Debug.Log("EMPIEZA ATAQUE");
+            Debug.Log("Ataqué");
             view.PlayAttack();
         }
 
-        // 👉 Corre el tiempo del ataque
         attackTimer -= Time.deltaTime;
 
         if (attackTimer <= 0f)
         {
             isAttacking = false;
-            Debug.Log("TERMINA ATAQUE");
+            Debug.Log("Dejé de Atacar");
         }
     }
 }
