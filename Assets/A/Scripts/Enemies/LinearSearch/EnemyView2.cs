@@ -15,4 +15,9 @@ public class EnemyView2 : MonoBehaviour
     {
         anim.SetFloat("Vel", rb.linearVelocity.magnitude);
     }
+
+    public void PlayAttack()
+    {
+        anim.SetTrigger("Attack");
+    }
 }

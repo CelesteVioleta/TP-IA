@@ -37,6 +37,8 @@ public class EnemyController : MonoBehaviour
             case FSM.EnemyState.Chase:
                 Chase();
                 break;
+
+ 
         }
     }
 

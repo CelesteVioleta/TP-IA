@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
 
@@ -10,13 +11,14 @@ public class EnemyControllerLS : MonoBehaviour
     [SerializeField] LineOfSight los;
     [SerializeField] List<PatrolPoint> patrolPoints;
 
+    private EnemyView2 view;
+    private Rigidbody rb;
+
     [Header("Variables")]
     [SerializeField] private float speed;
     [SerializeField] private float rotationSpeed;
     [SerializeField] private float productionTime;
     [SerializeField] private float evadeDistance;
-
-    private Rigidbody rb;
 
     [Header("Patrol")]
     [SerializeField] private int currentPatrolIndex = 0;   
@@ -24,18 +26,47 @@ public class EnemyControllerLS : MonoBehaviour
     private float waitTimer = 0f;
     private bool isWaiting = false;
 
+    [Header("Investigate")]
+    [SerializeField] private float investigateWaitTime = 2f;
+
+    private Vector3 lastKnownPlayerPosition;
+    private bool hasLastKnownPosition = false;
+
+    private bool isInvestigating = false;
+    private float investigateTimer = 0f;
+
+    [Header("Attack")]
+    [SerializeField] private float attackDuration = 1.2f;
+
+    private bool isAttacking = false;
+    private float attackTimer = 0f;
+
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         los = GetComponent<LineOfSight>();
         playerRb = player.GetComponent<Rigidbody>();
+        view = GetComponent<EnemyView2>();
     }
 
 
     void Update()
     {
+        if (isAttacking)
+        {
+            Attack();
+            return;
+        }
         bool canSeePlayer = los.CheckRange(transform, player.transform) && los.CheckAngle(transform, player.transform) && !los.CheckObstacles(transform, player.transform);
         bool isClose = Vector3.Distance(transform.position, player.position) <= evadeDistance;
+
+        if (canSeePlayer)
+        {
+            lastKnownPlayerPosition = player.position;
+            hasLastKnownPosition = true;
+            isInvestigating = false; 
+        }
 
         List<ActionOption> actionOptions = BuildAction(canSeePlayer, isClose);
 
@@ -65,7 +96,9 @@ public class EnemyControllerLS : MonoBehaviour
         List<ActionOption> actions = new List<ActionOption>();
 
         actions.Add(new ActionOption("Patrol", canSeePlayer ? 5f : 30f, Patrol));
+        actions.Add(new ActionOption("Investigate", !canSeePlayer && hasLastKnownPosition ? 50f : 0f, Investigate));
         actions.Add(new ActionOption("Chase", canSeePlayer && !isClose ? 80f : 0f, Chase));
+        actions.Add(new ActionOption("Attack", isClose ? 100f : 0f, Attack));
 
         return actions;
     }
@@ -137,5 +170,69 @@ public class EnemyControllerLS : MonoBehaviour
         }
 
         Move(dir.normalized);
+    }
+
+    private void Investigate()
+    {
+        Vector3 dir = lastKnownPlayerPosition - transform.position;
+        dir.y = 0;
+
+        float distance = dir.magnitude;
+
+        if (distance > 0.2f && !isInvestigating)
+        {
+            Move(dir.normalized);
+            return;
+        }
+
+        rb.linearVelocity = Vector3.zero;
+
+        if (!isInvestigating)
+        {
+            isInvestigating = true;
+            investigateTimer = investigateWaitTime;
+        }
+
+        transform.Rotate(0, rotationSpeed * Time.deltaTime, 0);
+
+        investigateTimer -= Time.deltaTime;
+
+        if (investigateTimer <= 0f)
+        {
+            isInvestigating = false;
+            hasLastKnownPosition = false;
+        }
+    }
+
+    private void Attack()
+    {
+        rb.linearVelocity = Vector3.zero;
+
+        Vector3 dir = player.position - transform.position;
+        dir.y = 0;
+
+        if (dir != Vector3.zero)
+        {
+            transform.forward = Vector3.Lerp(transform.forward, dir.normalized, Time.deltaTime * rotationSpeed);
+        }
+
+        // 👉 SOLO entra una vez
+        if (!isAttacking)
+        {
+            isAttacking = true;
+            attackTimer = attackDuration;
+
+            Debug.Log("EMPIEZA ATAQUE");
+            view.PlayAttack();
+        }
+
+        // 👉 Corre el tiempo del ataque
+        attackTimer -= Time.deltaTime;
+
+        if (attackTimer <= 0f)
+        {
+            isAttacking = false;
+            Debug.Log("TERMINA ATAQUE");
+        }
     }
 }

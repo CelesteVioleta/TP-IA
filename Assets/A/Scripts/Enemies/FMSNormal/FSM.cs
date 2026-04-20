@@ -5,10 +5,11 @@ public class FSM : MonoBehaviour
     public enum EnemyState
     {
         Patrol,
-        Chase
+        Chase,
+        Investigate
     }
 
-    public EnemyState currentState = EnemyState.Patrol;
+    public EnemyState currentState;
 
     public void UpdateState(bool canSeePlayer)
     {
@@ -18,7 +19,7 @@ public class FSM : MonoBehaviour
                 if (canSeePlayer)
                 {
                     currentState = EnemyState.Chase;
-                    Debug.Log("Persiguiendo");
+                    Debug.Log("Chase");
                 }
                 break;
 
@@ -26,7 +27,7 @@ public class FSM : MonoBehaviour
                 if (!canSeePlayer)
                 {
                     currentState = EnemyState.Patrol;
-                Debug.Log("Patrullando");
+                    Debug.Log("Patrol");
                 }
                 break;
         }
