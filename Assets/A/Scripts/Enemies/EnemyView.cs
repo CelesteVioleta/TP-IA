@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class EnemyView2 : MonoBehaviour
+public class EnemyView : MonoBehaviour
 {
     Animator anim;
     Rigidbody rb;

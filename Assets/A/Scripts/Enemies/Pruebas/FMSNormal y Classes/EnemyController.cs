@@ -21,7 +21,7 @@ public class EnemyController : MonoBehaviour
     private void Update()
     {
         bool canSeePlayer = los.CheckRange(transform, player.transform) && los.CheckAngle(transform, player.transform) && !los.CheckObstacles(transform, player.transform);
-        fsm.UpdateState(canSeePlayer);
+        //fsm.UpdateState(canSeePlayer);
 
         ExcecuteState();
     }

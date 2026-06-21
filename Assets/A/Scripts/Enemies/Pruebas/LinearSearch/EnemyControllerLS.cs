@@ -12,7 +12,7 @@ public class EnemyControllerLS : MonoBehaviour
     [SerializeField] LineOfSight los;
     [SerializeField] List<PatrolPoint> patrolPoints;
 
-    private EnemyView2 view;
+    private EnemyView view;
     private Rigidbody rb;
 
     [Header("Variables")]
@@ -52,7 +52,7 @@ public class EnemyControllerLS : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         los = GetComponent<LineOfSight>();
         playerRb = player.GetComponent<Rigidbody>();
-        view = GetComponent<EnemyView2>();
+        view = GetComponent<EnemyView>();
     }
 
 
