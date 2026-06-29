@@ -305,8 +305,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee5cbac9cc9907540b0e59d149af709e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraController
-  player: {fileID: 5916877077551903058, guid: 1b47497eb6c284441bf4493c9736be90, type: 3}
+  player: {fileID: 0}
   indicator: {fileID: 5595530568120594894}
+  alertRadius: 15
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!114 &6522231489315251020
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -336,9 +340,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e5ee2635e22db48b23a576f3f67b6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraModel
-  rotationSpeed: 30
+  rotationSpeed: 5
   minAngle: 0
-  maxAngle: 90
+  maxAngle: 180
 --- !u!1 &5595530568120594894
 GameObject:
   m_ObjectHideFlags: 0

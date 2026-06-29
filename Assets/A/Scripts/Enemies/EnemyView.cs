@@ -4,7 +4,7 @@ public class EnemyView : MonoBehaviour
 {
     Animator anim;
     Rigidbody rb;
-    EnemyController2 controller;
+    EnemyControllerFSM controller;
 
     private void Awake()
     {

@@ -27,7 +27,11 @@ public class FSM : MonoBehaviour
                     currentState = EnemyState.Chase;
                     Debug.Log("CHASE");
                 }
-
+                else if (hasLastKnownPosition)
+                {
+                    currentState = EnemyState.Investigate;
+                    Debug.Log("INVESTIGATE");
+                }
                 break;
 
             case EnemyState.Chase:

@@ -1,7 +1,14 @@
 fileFormatVersion: 2
-guid: e899cf9ac22551445974dbceebbfac1e
+guid: 04ba57353b4f0284686265d3d150c23c
 DefaultImporter:
   externalObjects: {}
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 159280
+  packageName: Sci-Fi Construction Kit (Modular)
+  packageVersion: 1.1.0
+  assetPath: Assets/Cosas/Demo/Scene/SciFi_Warehouse.unity
+  uploadId: 373385

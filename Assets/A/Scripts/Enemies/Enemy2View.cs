@@ -2,15 +2,22 @@ using UnityEngine;
 
 public class Enemy2View : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    Animator anim;
+    Rigidbody rb;
+    Enemy2ControllerFSM controller;
+
+    private void Awake()
     {
-        
+        anim = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody>();
+    }
+    private void Update()
+    {
+        anim.SetFloat("Vel", rb.linearVelocity.magnitude);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void PlayAttack()
     {
-        
+        anim.SetTrigger("Attack");
     }
 }

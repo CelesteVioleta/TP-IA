@@ -12,6 +12,7 @@ public class EnemyControllerFSM : MonoBehaviour
     private Rigidbody rb;
     private Rigidbody playerRb;
     private EnemyView view;
+    private PlayerHealth playerHealth;
 
     [Header("Movement")]
     [SerializeField] private float patrolSpeed = 2f;
@@ -57,6 +58,7 @@ public class EnemyControllerFSM : MonoBehaviour
         view = GetComponent<EnemyView>();
 
         playerRb = player.GetComponent<Rigidbody>();
+        playerHealth = player.GetComponent<PlayerHealth>();
     }
 
     private void Update()
@@ -280,6 +282,19 @@ public class EnemyControllerFSM : MonoBehaviour
         }
     }
 
+    public void ReceiveCameraAlert(Vector3 alertPosition)
+    {
+        if (fsm.currentState == FSM.EnemyState.Attack || fsm.currentState == FSM.EnemyState.Chase)
+            return;
+
+        lastKnownPlayerPosition = alertPosition;
+
+        hasLastKnownPosition = true;
+        investigationFinished = false;
+
+        currentWaypoints.Clear();
+    }
+
     private void Attack()
     {
         currentWaypoints.Clear(); 
@@ -302,6 +317,8 @@ public class EnemyControllerFSM : MonoBehaviour
         {
             attackTimer = attackDuration;
             if (view != null) view.PlayAttack();
+            
+            playerHealth.TakeDamage(20);
         }
     }
 }

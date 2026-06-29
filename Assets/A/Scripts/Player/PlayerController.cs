@@ -79,9 +79,9 @@ public class PlayerController : MonoBehaviour, PlayerInputs.IGameplayActions
     private void RotateCamera(Vector2 mouseInput)
     {
         float mouseX = mouseInput.x * mouseSensitivity * Time.deltaTime;
-        float mouseY = mouseInput.y * mouseSensitivity * Time.deltaTime;
+        //float mouseY = mouseInput.y * mouseSensitivity * Time.deltaTime;
 
-        xRotation -= mouseY;
+        //xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
         cameraHolder.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
