@@ -1594,27 +1594,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyControllerFSM
   player: {fileID: 0}
   indicator: {fileID: 1720589669299918721}
-  patrolPoints:
-  - point: {fileID: 0}
-    waitTime: 0
-  - point: {fileID: 0}
-    waitTime: 0
-  - point: {fileID: 0}
-    waitTime: 0
-  - point: {fileID: 0}
-    waitTime: 0
-  - point: {fileID: 0}
-    waitTime: 0
-  - point: {fileID: 0}
-    waitTime: 0
-  - point: {fileID: 0}
-    waitTime: 0
-  - point: {fileID: 0}
-    waitTime: 0
   patrolSpeed: 2
   chaseSpeed: 3.5
-  rotationSpeed: 5
-  patrolPointReachDistance: 1
+  rotationSpeed: 10
+  patrolPoints:
+  - point: {fileID: 0}
+    waitTime: 2
+  - point: {fileID: 0}
+    waitTime: 1
+  - point: {fileID: 0}
+    waitTime: 0
+  - point: {fileID: 0}
+    waitTime: 0
+  - point: {fileID: 0}
+    waitTime: 0
+  - point: {fileID: 0}
+    waitTime: 0
+  - point: {fileID: 0}
+    waitTime: 0
+  - point: {fileID: 0}
+    waitTime: 0
   investigateWaitTime: 5
   investigationRotationSpeed: 120
   attackDistance: 1.5

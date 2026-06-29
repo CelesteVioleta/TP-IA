@@ -47,7 +47,6 @@ public class BreadthFirstSearch
                 }
             }
         }
-
         return new List<Node>();
     }
 }

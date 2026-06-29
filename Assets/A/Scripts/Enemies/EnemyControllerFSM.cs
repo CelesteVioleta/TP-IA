@@ -13,15 +13,13 @@ public class EnemyControllerFSM : MonoBehaviour
     private Rigidbody playerRb;
     private EnemyView view;
 
-    [SerializeField] private List<PatrolPoint> patrolPoints;
-
     [Header("Movement")]
     [SerializeField] private float patrolSpeed = 2f;
     [SerializeField] private float chaseSpeed = 5f;
     [SerializeField] private float rotationSpeed = 5f;
 
     [Header("Patrol")]
-    [SerializeField] private float patrolPointReachDistance = 1f;
+    [SerializeField] private List<PatrolPoint> patrolPoints;
 
     private int currentPatrolIndex;
     private float waitTimer;
@@ -35,14 +33,21 @@ public class EnemyControllerFSM : MonoBehaviour
     private bool investigationFinished;
     private float investigateTimer;
 
-    private Vector3 lastKnownPlayerPosition;
     private bool hasLastKnownPosition;
+    private Vector3 lastKnownPlayerPosition;
 
     [Header("Attack")]
-    [SerializeField] private float attackDistance = 2f;
+    [SerializeField] private float attackDistance = 1f;
     [SerializeField] private float attackDuration = 1.2f;
-
     private float attackTimer;
+
+    [Header("Pathfinding")]
+    private List<Vector3> currentWaypoints = new List<Vector3>();
+    private int currentPathIndex = 0;
+    private float waypointReachDistance = 0.5f;
+
+    private Node targetNode;
+
 
     private void Awake()
     {
@@ -69,7 +74,6 @@ public class EnemyControllerFSM : MonoBehaviour
         {
             lastKnownPlayerPosition = player.position;
             hasLastKnownPosition = true;
-
             indicator.SetActive(true);
         }
         else
@@ -90,109 +94,169 @@ public class EnemyControllerFSM : MonoBehaviour
     {
         switch (fsm.currentState)
         {
-            case FSM.EnemyState.Patrol:
-                Patrol();
+            case FSM.EnemyState.Patrol: Patrol(); 
                 break;
-
-            case FSM.EnemyState.Chase:
-                Chase();
+            case FSM.EnemyState.Chase: Chase(); 
                 break;
-
-            case FSM.EnemyState.Investigate:
-                Investigate();
+            case FSM.EnemyState.Investigate: Investigate();
                 break;
-
-            case FSM.EnemyState.Attack:
-                Attack();
+            case FSM.EnemyState.Attack: Attack(); 
                 break;
         }
+    }
+
+    // PATHFINDING (DIJKSTRA)
+    private void SetPathDijkstra(Vector3 targetPosition)
+    {
+        Node startNode = PathfindingManager.Instance.GetClosestNode(transform.position);
+        targetNode = PathfindingManager.Instance.GetClosestNode(targetPosition);
+
+        currentWaypoints.Clear();
+
+        if (startNode != null && targetNode != null)
+        {
+            List<Node> path = Dijkstra.Run(startNode, IsSatisfied, GetConnections, GetCosts);
+
+            for (int i = 0; i < path.Count; i++)
+            {
+                currentWaypoints.Add(path[i].transform.position);
+            }
+
+            currentPathIndex = 0; 
+        }
+    }
+
+    public bool IsSatisfied(Node node)
+    {
+        return node == targetNode;
+    }
+
+    public List<Node> GetConnections(Node node)
+    {
+        return node.neighbours;
+    }
+
+    public float GetCosts(Node node1, Node node2)
+    {
+        float costs = Vector3.Distance(node1.transform.position, node2.transform.position);
+
+        return costs;
+    }
+
+    // MOVEMENT
+
+    // Devuelve TRUE si ya llegó al último waypoint de la lista
+    private bool FinishedPath(float speed)
+    {
+        if (currentWaypoints.Count == 0 || currentPathIndex >= currentWaypoints.Count)
+            return true;
+
+        Vector3 currentTarget = currentWaypoints[currentPathIndex];
+        Vector3 offsetToNode = currentTarget - transform.position;
+        offsetToNode.y = 0; 
+
+        if (offsetToNode.magnitude < waypointReachDistance)
+        {
+            currentPathIndex++;
+            if (currentPathIndex >= currentWaypoints.Count)
+            {
+                currentWaypoints.Clear();
+                return true;
+            }
+        }
+        else
+        {
+            Vector3 steerDir = SteeringBehavior.Seek(transform, currentTarget);
+            Move(steerDir, speed);
+        }
+
+        return false;
     }
 
     private void Move(Vector3 dir, float speed)
     {
         Vector3 velocity = dir * speed;
         velocity.y = rb.linearVelocity.y;
-
         rb.linearVelocity = velocity;
 
         if (dir != Vector3.zero)
         {
-            transform.forward =
-                Vector3.Lerp(
-                    transform.forward,
-                    dir.normalized,
-                    Time.deltaTime * rotationSpeed);
+            transform.forward = Vector3.Lerp(
+                transform.forward,
+                dir.normalized,
+                Time.deltaTime * rotationSpeed);
         }
     }
 
+    // STATES
     private void Patrol()
     {
         investigationFinished = false;
-
-        if (patrolPoints.Count == 0)
-            return;
-
-        PatrolPoint point = patrolPoints[currentPatrolIndex];
+        if (patrolPoints.Count == 0) return;
 
         if (isWaiting)
         {
             rb.linearVelocity = Vector3.zero;
-
             waitTimer -= Time.deltaTime;
 
             if (waitTimer <= 0)
             {
                 isWaiting = false;
-
                 currentPatrolIndex++;
-
-                if (currentPatrolIndex >= patrolPoints.Count)
-                    currentPatrolIndex = 0;
+                if (currentPatrolIndex >= patrolPoints.Count) currentPatrolIndex = 0;
             }
-
             return;
         }
 
-        Vector3 dir =
-            point.point.position - transform.position;
+        PatrolPoint targetPoint = patrolPoints[currentPatrolIndex];
 
-        dir.y = 0;
+        if (currentWaypoints.Count == 0)
+        {
+            SetPathDijkstra(targetPoint.point.position);
 
-        if (dir.magnitude < patrolPointReachDistance)
+            if (currentWaypoints.Count == 0)
+            {
+                Debug.LogWarning($"No hay ruta hacia el PatrolPoint {currentPatrolIndex}. Saltando al siguiente.");
+                isWaiting = true;
+                waitTimer = 1f;
+                return;
+            }
+        }
+
+        bool hasReachedDestination = FinishedPath(patrolSpeed);
+
+        if (hasReachedDestination)
         {
             isWaiting = true;
-            waitTimer = point.waitTime;
-
-            return;
+            waitTimer = targetPoint.waitTime;
         }
-
-        Move(dir.normalized, patrolSpeed);
     }
 
     private void Chase()
     {
         investigationFinished = false;
+        currentWaypoints.Clear(); 
 
-        Vector3 dir =
-            SteeringBehavior.Chase(
-                transform,
-                player,
-                playerRb,
-                1f);
-
+        Vector3 dir = SteeringBehavior.Chase(transform, player, playerRb, 1f);
         Move(dir, chaseSpeed);
     }
 
     private void Investigate()
     {
-        Vector3 dir =
-            lastKnownPlayerPosition - transform.position;
-
-        dir.y = 0;
-
-        if (dir.magnitude > 0.2f && !isInvestigating)
+        if (!isInvestigating && currentWaypoints.Count == 0)
         {
-            Move(dir.normalized, patrolSpeed);
+            SetPathDijkstra(lastKnownPlayerPosition);
+        }
+
+        if (currentWaypoints.Count > 0)
+        {
+            bool hasReachedDestination = FinishedPath(patrolSpeed);
+
+            if (hasReachedDestination)
+            {
+                isInvestigating = true;
+                investigateTimer = investigateWaitTime;
+            }
             return;
         }
 
@@ -204,11 +268,7 @@ public class EnemyControllerFSM : MonoBehaviour
             investigateTimer = investigateWaitTime;
         }
 
-        transform.Rotate(
-            0,
-            investigationRotationSpeed * Time.deltaTime,
-            0);
-
+        transform.Rotate(0, investigationRotationSpeed * Time.deltaTime, 0);
         investigateTimer -= Time.deltaTime;
 
         if (investigateTimer <= 0)
@@ -216,25 +276,24 @@ public class EnemyControllerFSM : MonoBehaviour
             isInvestigating = false;
             hasLastKnownPosition = false;
             investigationFinished = true;
+            currentWaypoints.Clear();
         }
     }
 
     private void Attack()
     {
+        currentWaypoints.Clear(); 
         rb.linearVelocity = Vector3.zero;
 
-        Vector3 dir =
-            player.position - transform.position;
-
+        Vector3 dir = player.position - transform.position;
         dir.y = 0;
 
         if (dir != Vector3.zero)
         {
-            transform.forward =
-                Vector3.Lerp(
-                    transform.forward,
-                    dir.normalized,
-                    Time.deltaTime * rotationSpeed);
+            transform.forward = Vector3.Lerp(
+                transform.forward,
+                dir.normalized,
+                Time.deltaTime * rotationSpeed);
         }
 
         attackTimer -= Time.deltaTime;
@@ -242,9 +301,7 @@ public class EnemyControllerFSM : MonoBehaviour
         if (attackTimer <= 0)
         {
             attackTimer = attackDuration;
-
-            if (view != null)
-                view.PlayAttack();
+            if (view != null) view.PlayAttack();
         }
     }
 }
