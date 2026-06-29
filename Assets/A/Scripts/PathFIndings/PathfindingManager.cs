@@ -10,7 +10,7 @@ public class PathfindingManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
-        allNodes = FindObjectsOfType<Node>();
+        allNodes = FindObjectsByType<Node>(FindObjectsSortMode.None);
     }
 
     // Recibe una posición en el nivel y devuelve el nodo más cercano a esa posición.

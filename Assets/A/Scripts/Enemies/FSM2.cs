@@ -5,7 +5,6 @@ public class FSM2 : MonoBehaviour
     public enum EnemyState
     {
         Patrol,
-        Chase,
         Investigate,
         Attack,
         Evade
